@@ -1,0 +1,107 @@
+import org.jooq.meta.jaxb.Logging
+import nu.studer.gradle.jooq.JooqEdition
+
+buildscript {
+    configurations['classpath'].resolutionStrategy.eachDependency {
+        if (requested.group.startsWith('org.jooq') && requested.name.startsWith('jooq')) {
+            useVersion '3.17.3'
+        }
+    }
+}
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.5'
+    id 'io.spring.dependency-management' version '1.1.6'
+    id 'nu.studer.jooq' version '9.0'
+}
+
+group = 'vn.omdinh'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+jooq {
+    version = '3.19.1'
+    edition = JooqEdition.OSS
+
+    configurations {
+        main {  // name of the jOOQ configuration
+            generationTool {
+                logging = Logging.WARN
+                jdbc {
+                    driver = 'com.mysql.cj.jdbc.Driver'
+                    url = 'jdbc:mysql://localhost:3306/cellphone_springboot_db'
+                    user = 'root'
+                    password = ''
+                    properties {
+                        property {
+                            key = 'ssl'
+                            value = 'false'
+                        }
+                    }
+                }
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+                    database {
+                        name = 'org.jooq.meta.mysql.MySQLDatabase'
+                        inputSchema = 'cellphone_springboot_db'
+                        forcedTypes {
+                            forcedType {
+                                name = 'varchar'
+                                includeExpression = '.*'
+                                includeTypes = 'JSONB?'
+                            }
+                            forcedType {
+                                name = 'varchar'
+                                includeExpression = '.*'
+                                includeTypes = 'INET'
+                            }
+                        }
+                    }
+                    generate {
+                        deprecated = false
+                        records = true
+                        immutablePojos = true
+                        fluentSetters = true
+                    }
+                    target {
+                        packageName = 'nu.studer.sample'
+                        directory = 'build/generated-src/jooq/main'  // default (can be omitted)
+                    }
+                    strategy.name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+                }
+            }
+        }
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    jooqGenerator 'com.mysql:mysql-connector-j:8.0.31'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+tasks.named('generateJooq').configure { allInputsDeclared = true }
