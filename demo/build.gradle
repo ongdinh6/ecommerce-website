@@ -1,5 +1,5 @@
-import org.jooq.meta.jaxb.Logging
 import nu.studer.gradle.jooq.JooqEdition
+import org.jooq.meta.jaxb.Logging
 
 buildscript {
     configurations['classpath'].resolutionStrategy.eachDependency {
@@ -14,6 +14,7 @@ plugins {
     id 'org.springframework.boot' version '3.3.5'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'nu.studer.jooq' version '9.0'
+    id 'org.liquibase.gradle' version '2.0.4'
 }
 
 group = 'vn.omdinh'
@@ -35,7 +36,7 @@ jooq {
                 logging = Logging.WARN
                 jdbc {
                     driver = 'com.mysql.cj.jdbc.Driver'
-                    url = 'jdbc:mysql://localhost:3306/cellphone_springboot_db'
+                    url = 'jdbc:mysql://localhost:3306/vegetable-grocery-2024'
                     user = 'root'
                     password = ''
                     properties {
@@ -49,7 +50,7 @@ jooq {
                     name = 'org.jooq.codegen.DefaultGenerator'
                     database {
                         name = 'org.jooq.meta.mysql.MySQLDatabase'
-                        inputSchema = 'cellphone_springboot_db'
+                        inputSchema = 'vegetable-grocery-2024'
                         forcedTypes {
                             forcedType {
                                 name = 'varchar'
@@ -84,6 +85,11 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+
+    liquibaseRuntime {
+        extendsFrom configurations.compileClasspath
+        extendsFrom configurations.runtimeClasspath
+    }
 }
 
 repositories {
@@ -92,16 +98,56 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    jooqGenerator 'com.mysql:mysql-connector-j:8.0.31'
+    jooqGenerator 'com.mysql:mysql-connector-j:8.2.0'
+    implementation 'org.liquibase:liquibase-core:4.29.0'
+    implementation 'org.springframework.boot:spring-boot-starter-security:3.2.8'
+
+    liquibaseRuntime 'org.liquibase:liquibase-core:4.29.0'
+    liquibaseRuntime sourceSets.main.output
+}
+
+liquibase {
+    activities {
+        main {
+            arguments = [
+                'logLevel': 'info',
+                '--changeLogFile': 'src/main/resources/db/changelog/db.changelog-master.yaml',
+                '--url': 'jdbc:mysql://localhost:3306/vegetable-grocery-2024',
+                'username': 'root',
+                'password': ''
+            ]
+        }
+    }
+    runList = 'main'
+}
+
+tasks.register('updateDatabase', JavaExec) {
+    classpath = configurations.liquibaseRuntime
+    mainClass.set('liquibase.integration.commandline.Main')
+    args = [
+        'update',
+        '-Dliquibase.command.url=jdbc:mysql://localhost:3306/vegetable-grocery-2024',
+        '-Dliquibase.command.username=root',
+        '-Dliquibase.command.password=',
+        '-Dliquibase.command.changeLogFile=src/main/resources/db/changelog/db.changelog-master.yaml',
+    ]
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
-tasks.named('generateJooq').configure { allInputsDeclared = true }
+
+tasks.named('generateJooq').configure {
+    allInputsDeclared = true
+}
+
