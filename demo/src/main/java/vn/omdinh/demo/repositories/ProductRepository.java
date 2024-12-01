@@ -7,7 +7,9 @@ import org.jooq.Record;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import vn.omdinh.demo.dtos.ProductDTO;
+import vn.omdinh.demo.models.requests.PaginatedSearch;
 import vn.omdinh.demo.models.requests.ProductRequest;
+import vn.omdinh.demo.models.responses.PaginatedResultResponse;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -24,8 +26,16 @@ public class ProductRepository {
         this.context = context;
     }
 
-    public Collection<ProductDTO> selectAllProducts() {
-        return this.context.selectFrom(PRODUCT).stream().map(r -> r.into(ProductDTO.class)).collect(Collectors.toList());
+    public Collection<ProductDTO> selectAllProducts(PaginatedSearch paginatedSearch) {
+        return this.context
+                .selectFrom(PRODUCT)
+                .where(PRODUCT.TITLE.likeIgnoreCase("%" + paginatedSearch.getQuery() + "%"))
+                .offset(paginatedSearch.getOffset())
+                .limit(paginatedSearch.getLimit())
+                .stream()
+                .map(r -> r.into(ProductDTO.class))
+                .collect(Collectors.toList());
+
     }
 
     public void store(ProductDTO dto) {

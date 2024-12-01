@@ -5,7 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import vn.omdinh.demo.dtos.ProductDTO;
 import vn.omdinh.demo.exceptions.NotFoundException;
+import vn.omdinh.demo.models.requests.PaginatedSearch;
 import vn.omdinh.demo.models.requests.ProductRequest;
+import vn.omdinh.demo.models.responses.PaginatedResultResponse;
 import vn.omdinh.demo.repositories.ProductRepository;
 import vn.omdinh.demo.services.ProductService;
 
@@ -32,8 +34,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Collection<ProductDTO> selectAllProducts() {
-        return this.repository.selectAllProducts();
+    public PaginatedResultResponse<Collection<ProductDTO>> selectAllProducts(PaginatedSearch paginatedSearch) {
+        var products = this.repository.selectAllProducts(paginatedSearch);
+
+        return new PaginatedResultResponse<>(
+                products.toArray().length,
+                paginatedSearch.getLimit(),
+                products.size() % paginatedSearch.getLimit(),
+                paginatedSearch.getLimit(),
+                paginatedSearch,
+                products
+        );
     }
 
     @Override
