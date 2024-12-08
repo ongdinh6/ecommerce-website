@@ -8,54 +8,81 @@ import vn.omdinh.demo.exceptions.NotFoundException;
 import vn.omdinh.demo.models.requests.PaginatedSearch;
 import vn.omdinh.demo.models.requests.ProductRequest;
 import vn.omdinh.demo.models.responses.PaginatedResultResponse;
-import vn.omdinh.demo.repositories.ProductRepository;
+import vn.omdinh.demo.repositories.impl.ProductRepositoryImpl;
 import vn.omdinh.demo.services.ProductService;
 
 import java.io.IOException;
-import java.util.Base64;
 import java.util.Collection;
 
 
 @Service
 public class ProductServiceImpl implements ProductService {
-    private final ProductRepository repository;
+    private final ProductRepositoryImpl repository;
 
     @Autowired
-    public ProductServiceImpl(ProductRepository repository) {
+    public ProductServiceImpl(ProductRepositoryImpl repository) {
         this.repository = repository;
     }
 
     @Override
     public ProductDTO createNew(ProductRequest request, MultipartFile file) throws IOException {
-        var record1 = this.repository.newRecord(request).setThumbnail(Base64.getEncoder().encode(file.getBytes()));
-        var dto = record1.into(ProductDTO.class);
-        this.repository.store(dto);
-        return dto;
+        ProductDTO productDTO = ProductDTO.from(request, file);
+
+        var productRecord = this.repository.newRecord(productDTO);
+        var savedProduct = productRecord.into(ProductDTO.class);
+        this.repository.store(savedProduct);
+
+        return savedProduct;
     }
 
     @Override
     public PaginatedResultResponse<Collection<ProductDTO>> selectAllProducts(PaginatedSearch paginatedSearch) {
+        var total = this.repository.countSelectAllProducts(paginatedSearch);
         var products = this.repository.selectAllProducts(paginatedSearch);
 
+        paginatedSearch.setLastItemId(products.stream().toList().get(products.size() - 1).getId());
+
         return new PaginatedResultResponse<>(
-                products.toArray().length,
-                paginatedSearch.getLimit(),
-                products.size() % paginatedSearch.getLimit(),
-                paginatedSearch.getLimit(),
-                paginatedSearch,
-                products
+            total,
+            paginatedSearch.getLimit(),
+            total / paginatedSearch.getLimit(),
+            paginatedSearch.getLimit(),
+            paginatedSearch,
+            products.stream().map(p -> p.into(ProductDTO.class)).toList()
         );
     }
 
     @Override
     public ProductDTO selectOneById(String id) {
-        var record1 = this.repository.selectOne(id);
+        var record1 = this.repository.findOneById(id);
 
         if (record1 == null) {
-            throw new NotFoundException("Not found a product has id {id}");
+            throw new NotFoundException("Not found a product has id [%s]".formatted(id));
         }
 
         return record1.into(ProductDTO.class);
+    }
+
+    @Override
+    public ProductDTO updateOneById(String id, ProductDTO updatedDTO) throws NoSuchFieldException, IllegalAccessException {
+        var updatedDto = this.selectOneById(id);
+
+        var dto = updatedDto.update(updatedDTO);
+
+        this.repository.store(dto);
+
+        return dto;
+    }
+
+    @Override
+    public void deleteOneById(String id) {
+        var record1 = this.repository.findOneById(id);
+
+        if (record1 == null) {
+            throw new NotFoundException("Not found a product has id [%s]".formatted(id));
+        }
+
+        this.repository.deleteOneById(id);
     }
 
 }

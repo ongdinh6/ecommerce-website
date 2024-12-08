@@ -13,4 +13,6 @@ public interface ProductService {
     ProductDTO createNew(ProductRequest request, MultipartFile file) throws IOException;
     PaginatedResultResponse<Collection<ProductDTO>> selectAllProducts(PaginatedSearch paginatedSearch);
     ProductDTO selectOneById(String id);
+    ProductDTO updateOneById(String id, ProductDTO updatedDTO) throws NoSuchFieldException, IllegalAccessException;
+    void deleteOneById(String id);
 }

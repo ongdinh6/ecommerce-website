@@ -1,6 +1,5 @@
 package vn.omdinh.demo.controllers;
 
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -27,7 +26,7 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PostMapping(path = "/new", consumes = { MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PostMapping(path = "/new", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     ResponseEntity<ProductDTO> addNew(
         @RequestPart("request") ProductRequest request,
         @RequestPart("thumbnail") MultipartFile thumbnail
@@ -39,17 +38,41 @@ public class ProductController {
 
     @GetMapping
     ResponseEntity<PaginatedResultResponse<Collection<ProductDTO>>> selectAllProducts(
-        @Valid @RequestBody(required = false) PaginatedSearch paginatedSearch
+        @RequestBody(required = false) PaginatedSearch paginatedSearch
     ) {
         PaginatedSearch sanitizedPaginatedSearch = new PaginatedSearch();
         if (paginatedSearch != null) {
-            sanitizedPaginatedSearch = paginatedSearch;
+            sanitizedPaginatedSearch = new PaginatedSearch(
+                paginatedSearch.getQuery(),
+                paginatedSearch.getCategory(),
+                paginatedSearch.getLastItemId(),
+                paginatedSearch.getLimit()
+            );
         }
+
         return ResponseEntity.ok().body(this.productService.selectAllProducts(sanitizedPaginatedSearch));
     }
 
     @GetMapping("/{id}")
     ResponseEntity<ProductDTO> selectOneById(@PathVariable String id) {
         return ResponseEntity.ok().body(this.productService.selectOneById(id));
+    }
+
+    @PutMapping("/{id}")
+    ResponseEntity<ProductDTO> updateOneById(
+        @PathVariable String id,
+        @RequestBody ProductRequest productRequest,
+        @RequestPart MultipartFile thumbnail
+    ) throws IOException, NoSuchFieldException, IllegalAccessException {
+        var productDTO = ProductDTO.from(productRequest, thumbnail);
+
+        return ResponseEntity.ok().body(this.productService.updateOneById(id, productDTO));
+    }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity<String> deleteOneById(@PathVariable String id) {
+        this.productService.deleteOneById(id);
+
+        return ResponseEntity.ok().body("Delete successful!");
     }
 }

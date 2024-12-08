@@ -3,7 +3,6 @@ package vn.omdinh.demo.repositories.impl;
 import nu.studer.sample.tables.records.UsersRecord;
 import org.jooq.DSLContext;
 import org.jooq.Record;
-import org.jooq.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import vn.omdinh.demo.dtos.UserDTO;

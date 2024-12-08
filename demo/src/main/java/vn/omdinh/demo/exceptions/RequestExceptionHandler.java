@@ -2,8 +2,6 @@ package vn.omdinh.demo.exceptions;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.annotation.Nonnull;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -17,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.ArrayList;
@@ -88,5 +87,21 @@ public class RequestExceptionHandler extends ResponseEntityExceptionHandler {
         HttpException httpException = new HttpException(HttpStatus.BAD_REQUEST, String.join(",", errors));
 
         return handleExceptionInternal(ex, httpException.toExceptionResponse(getRequestURI(request)), headers, httpException.status, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestPart(
+            MissingServletRequestPartException ex,
+            @Nonnull HttpHeaders headers,
+            @Nonnull HttpStatusCode status,
+            @Nonnull WebRequest request
+    ) {
+        HttpException httpException = new HttpException(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage());
+
+        return handleExceptionInternal(ex,
+                httpException.toExceptionResponse(getRequestURI(request)),
+                headers,
+                httpException.status, request
+        );
     }
 }

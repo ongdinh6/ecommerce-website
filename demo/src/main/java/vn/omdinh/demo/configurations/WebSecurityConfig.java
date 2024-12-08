@@ -49,10 +49,10 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**")
-                .permitAll()
+//                .requestMatchers("/auth/**")
+//                .permitAll()
                 .anyRequest()
-                .authenticated())
+                .permitAll())
             .httpBasic(Customizer.withDefaults())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
