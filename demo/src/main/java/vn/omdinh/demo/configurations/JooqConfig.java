@@ -28,6 +28,7 @@ public class JooqConfig {
     @PostConstruct
     public void init() {
         try {
+            System.out.printf("url: %s, username: %s, password: %s%n", url, username, password);
             connection = DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {
             throw new RuntimeException("Failed to establish database connection", e);

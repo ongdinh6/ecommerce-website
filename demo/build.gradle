@@ -1,6 +1,7 @@
 import nu.studer.gradle.jooq.JooqEdition
 import org.jooq.meta.jaxb.Logging
 
+
 buildscript {
     configurations['classpath'].resolutionStrategy.eachDependency {
         if (requested.group.startsWith('org.jooq') && requested.name.startsWith('jooq')) {
@@ -16,6 +17,11 @@ plugins {
     id 'nu.studer.jooq' version '9.0'
     id 'org.liquibase.gradle' version '2.0.4'
 }
+
+def DB_URL = System.getenv("DB_URL")
+def DB_NAME = System.getenv("DB_NAME")
+def DB_USERNAME = System.getenv("DB_USERNAME")
+def DB_PASSWORD = System.getenv("DB_PASSWORD")
 
 group = 'vn.omdinh'
 version = '0.0.1-SNAPSHOT'
@@ -36,9 +42,9 @@ jooq {
                 logging = Logging.WARN
                 jdbc {
                     driver = 'com.mysql.cj.jdbc.Driver'
-                    url = 'jdbc:mysql://localhost:3306/vegetable-grocery-2024'
-                    user = 'root'
-                    password = ''
+                    url = DB_URL
+                    user = DB_USERNAME
+                    password = DB_PASSWORD
                     properties {
                         property {
                             key = 'ssl'
@@ -50,7 +56,7 @@ jooq {
                     name = 'org.jooq.codegen.DefaultGenerator'
                     database {
                         name = 'org.jooq.meta.mysql.MySQLDatabase'
-                        inputSchema = 'vegetable-grocery-2024'
+                        inputSchema = DB_NAME
                         forcedTypes {
                             forcedType {
                                 name = 'varchar'
@@ -118,36 +124,23 @@ dependencies {
     liquibaseRuntime sourceSets.main.output
 }
 
-liquibase {
-    activities {
-        main {
-            arguments = [
-                'logLevel': 'info',
-                '--changeLogFile': 'src/main/resources/db/changelog/db.changelog-master.yaml',
-                '--url': 'jdbc:mysql://localhost:3306/vegetable-grocery-2024',
-                'username': 'root',
-                'password': ''
-            ]
-        }
-    }
-    runList = 'main'
-}
-
 tasks.register('updateDatabase', JavaExec) {
     classpath = configurations.liquibaseRuntime
     mainClass.set('liquibase.integration.commandline.Main')
     args = [
+        "--url=${DB_URL}",
+        "--username=${DB_USERNAME}",
+        "--password=${DB_PASSWORD}",
+        '--changeLogFile=src/main/resources/db/changelog/db.changelog-master.yaml',
         'update',
-        '-Dliquibase.command.url=jdbc:mysql://localhost:3306/vegetable-grocery-2024',
-        '-Dliquibase.command.username=root',
-        '-Dliquibase.command.password=',
-        '-Dliquibase.command.changeLogFile=src/main/resources/db/changelog/db.changelog-master.yaml',
     ]
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.test.dependsOn('updateDatabase')
 
 tasks.named('generateJooq').configure {
     allInputsDeclared = true

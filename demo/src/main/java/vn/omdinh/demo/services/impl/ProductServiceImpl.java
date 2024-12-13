@@ -40,7 +40,9 @@ public class ProductServiceImpl implements ProductService {
         var total = this.repository.countSelectAllProducts(paginatedSearch);
         var products = this.repository.selectAllProducts(paginatedSearch);
 
-        paginatedSearch.setLastItemId(products.stream().toList().get(products.size() - 1).getId());
+//        if (!products.isEmpty()) {
+            paginatedSearch.setLastItemId(products.stream().toList().get(products.size() - 1).getId());
+//        }
 
         return new PaginatedResultResponse<>(
             total,

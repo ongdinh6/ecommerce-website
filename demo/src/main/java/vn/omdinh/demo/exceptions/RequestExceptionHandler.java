@@ -2,6 +2,8 @@ package vn.omdinh.demo.exceptions;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.annotation.Nonnull;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -22,20 +24,23 @@ import java.util.ArrayList;
 
 @RestControllerAdvice
 public class RequestExceptionHandler extends ResponseEntityExceptionHandler {
+    Logger logger = LoggerFactory.getLogger(RequestExceptionHandler.class);
 
     private String getRequestURI(WebRequest webRequest) {
         return ((ServletWebRequest)webRequest).getRequest().getRequestURI();
     }
 
     @ExceptionHandler(value = {
-            Exception.class,
-            HttpException.class,
-            IllegalArgumentException.class,
-            AuthenticationException.class,
-            AccessDeniedException.class,
-            ExpiredJwtException.class,
+        Exception.class,
+        HttpException.class,
+        IllegalArgumentException.class,
+        AuthenticationException.class,
+        AccessDeniedException.class,
+        ExpiredJwtException.class,
     })
     ResponseEntity<Object> handleHttpException(WebRequest request, Exception exception) {
+        logger.error(exception.getLocalizedMessage(), exception);
+
         if (exception instanceof HttpException e) {
             return ResponseEntity.status(e.status).body(e.toExceptionResponse(getRequestURI(request)));
         }
