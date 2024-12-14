@@ -5,14 +5,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import vn.omdinh.demo.dtos.ProductDTO;
 import vn.omdinh.demo.exceptions.NotFoundException;
-import vn.omdinh.demo.models.requests.PaginatedSearch;
+import vn.omdinh.demo.models.requests.ProductFilter;
+import vn.omdinh.demo.models.requests.ProductItem;
 import vn.omdinh.demo.models.requests.ProductRequest;
 import vn.omdinh.demo.models.responses.PaginatedResultResponse;
+import vn.omdinh.demo.models.responses.ProductItemResponse;
 import vn.omdinh.demo.repositories.impl.ProductRepositoryImpl;
 import vn.omdinh.demo.services.ProductService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 
 @Service
@@ -35,21 +39,20 @@ public class ProductServiceImpl implements ProductService {
         return savedProduct;
     }
 
-    @Override
-    public PaginatedResultResponse<Collection<ProductDTO>> selectAllProducts(PaginatedSearch paginatedSearch) {
-        var total = this.repository.countSelectAllProducts(paginatedSearch);
-        var products = this.repository.selectAllProducts(paginatedSearch);
+    public PaginatedResultResponse<Collection<ProductDTO>> selectAllProducts(ProductFilter productFilter) {
+        var total = this.repository.countSelectAllProducts(productFilter);
+        var products = this.repository.selectAllProducts(productFilter);
 
-//        if (!products.isEmpty()) {
-            paginatedSearch.setLastItemId(products.stream().toList().get(products.size() - 1).getId());
-//        }
+        if (!products.isEmpty()) {
+            productFilter.setLastItemId(products.stream().toList().get(products.size() - 1).getId());
+        }
 
         return new PaginatedResultResponse<>(
             total,
-            paginatedSearch.getLimit(),
-            total / paginatedSearch.getLimit(),
-            paginatedSearch.getLimit(),
-            paginatedSearch,
+            productFilter.getLimit(),
+            total / productFilter.getLimit(),
+            productFilter.getLimit(),
+            productFilter,
             products.stream().map(p -> p.into(ProductDTO.class)).toList()
         );
     }
@@ -78,13 +81,40 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteOneById(String id) {
-        var record1 = this.repository.findOneById(id);
-
-        if (record1 == null) {
-            throw new NotFoundException("Not found a product has id [%s]".formatted(id));
-        }
-
-        this.repository.deleteOneById(id);
+        this.repository.deleteOneById(this.selectOneById(id).getId());
     }
 
+    @Override
+    public Collection<ProductDTO> selectProductsById(List<String> ids) {
+        Collection<ProductDTO> productDTOS = new ArrayList<>();
+
+        for (String id : ids) {
+            productDTOS.add(this.selectOneById(id));
+        }
+
+        return productDTOS;
+    }
+
+    @Override
+    public Collection<ProductItemResponse> calculateCost(Collection<ProductItem> items) {
+        var products = this.selectProductsById(items.stream().map(ProductItem::productId).toList());
+
+        Collection<ProductItemResponse> productItemResponses = new ArrayList<>();
+
+        for (ProductDTO productDTO : products) {
+            items.forEach(item -> {
+                if (item.productId().equals(productDTO.getId())) {
+                    productItemResponses.add(new ProductItemResponse(
+                        productDTO.getId(),
+                        item.amount(),
+                        item.amount() * productDTO.getPrice(),
+                        item.amount() * productDTO.getDiscount(),
+                        (productDTO.getPrice() - productDTO.getDiscount()) * item.amount()
+                    ));
+                }
+            });
+        }
+
+        return productItemResponses;
+    }
 }

@@ -1,5 +1,6 @@
 package vn.omdinh.demo.repositories.impl;
 
+import jakarta.annotation.Nullable;
 import nu.studer.sample.tables.records.ProductsRecord;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,9 +8,12 @@ import org.springframework.stereotype.Repository;
 import vn.omdinh.demo.dtos.ProductDTO;
 import vn.omdinh.demo.exceptions.InternalServerError;
 import vn.omdinh.demo.models.requests.PaginatedSearch;
+import vn.omdinh.demo.models.requests.ProductFilter;
 import vn.omdinh.demo.repositories.ProductRepository;
+import vn.omdinh.demo.utils.StringUtils;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import static nu.studer.sample.tables.OrderProduct.ORDER_PRODUCT;
@@ -24,27 +28,28 @@ public class ProductRepositoryImpl implements ProductRepository {
         this.dslContext = dslContext;
     }
 
-    public int countSelectAllProducts(PaginatedSearch paginatedSearch) {
+    public int countSelectAllProducts(ProductFilter productFilter) {
         return this.dslContext.fetchCount(
             this.dslContext
                 .selectFrom(PRODUCTS)
-                .where(PRODUCTS.NAME.likeIgnoreCase("%" + paginatedSearch.getQuery() + "%"))
+                .where(PRODUCTS.NAME.likeIgnoreCase("%" + productFilter.getQuery() + "%"))
         );
     }
 
-    public Collection<ProductsRecord> selectAllProducts(PaginatedSearch paginatedSearch) {
+    @Override
+    public Collection<ProductsRecord> selectAllProducts(ProductFilter productFilter) {
         return this.dslContext
             .selectFrom(PRODUCTS)
-            .where(PRODUCTS.NAME.likeIgnoreCase("%" + paginatedSearch.getQuery() + "%"))
+            .where(PRODUCTS.NAME.likeIgnoreCase("%" + productFilter.getQuery() + "%"))
             .orderBy(PRODUCTS.ID)
-            .seek(paginatedSearch.getLastItemId())
-            .limit(paginatedSearch.getLimit())
+            .seek(productFilter.getLastItemId())
+            .limit(productFilter.getLimit())
             .stream()
             .toList();
     }
 
     @Override
-    public ProductsRecord findOneById(String id) {
+    public @Nullable ProductsRecord findOneById(String id) {
         return this.dslContext.selectFrom(PRODUCTS).where(PRODUCTS.ID.eq(id)).fetchAny();
     }
 
@@ -55,7 +60,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public ProductsRecord newRecord(ProductDTO productDTO) {
-        return this.dslContext.newRecord(PRODUCTS, productDTO).setId(String.valueOf(UUID.randomUUID()));
+        return this.dslContext.newRecord(PRODUCTS, productDTO).setId(StringUtils.generateUUID());
     }
 
     @Override
@@ -72,5 +77,16 @@ public class ProductRepositoryImpl implements ProductRepository {
             this.dslContext.rollback().execute();
             throw new InternalServerError("Delete a product occurred an error! Error: %s".formatted(e.getMessage()));
         }
+    }
+
+
+    @Override
+    public Collection<ProductsRecord> selectProductsById(List<String> ids) {
+        return this.dslContext
+            .selectFrom(PRODUCTS)
+            .where(String.valueOf(ids.stream().sorted().map(PRODUCTS.ID::eq)))
+            .orderBy(PRODUCTS.ID)
+            .stream()
+            .toList();
     }
 }

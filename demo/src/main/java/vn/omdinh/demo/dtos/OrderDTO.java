@@ -15,6 +15,7 @@ public class OrderDTO {
     private double totalCost;
     private int totalItems;
     private String addressDelivery;
+    private String phoneNumber;
     private String status;
     private Date createdAt;
     private Date updatedAt;
