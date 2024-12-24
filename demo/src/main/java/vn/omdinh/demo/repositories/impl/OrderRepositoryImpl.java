@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import vn.omdinh.demo.dtos.OrderDTO;
 import vn.omdinh.demo.dtos.OrderProductDTO;
+import vn.omdinh.demo.exceptions.InternalServerError;
 import vn.omdinh.demo.models.requests.OrderFilter;
 import vn.omdinh.demo.repositories.OrderRepository;
 import vn.omdinh.demo.utils.StringUtils;
@@ -19,6 +20,7 @@ import static nu.studer.sample.tables.OrderProduct.ORDER_PRODUCT;
 
 @Component
 public class OrderRepositoryImpl implements OrderRepository {
+    private static final org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(OrderRepositoryImpl.class);
     private final DSLContext dslContext;
 
     @Autowired
@@ -55,16 +57,23 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public void store(OrderDTO orderDTO) {
-        this.dslContext.newRecord(ORDERS, orderDTO).store();
-    }
+    public void store(OrderDTO orderDTO, List<OrderProductDTO> orderedItems) {
+        try {
+            this.dslContext.transaction(ctx -> {
+                ctx.dsl().newRecord(ORDERS, orderDTO).store();
 
-    @Override
-    public void storeOrderProduct(List<OrderProductDTO> orderedItems) {
+                orderedItems.forEach(item -> {
+                    ctx.dsl().insertInto(ORDER_PRODUCT)
+                        .values(item.getOrderId(), item.getProductId(), item.getAmount())
+                        .execute();
+                });
 
-        this.dslContext
-            .insertInto(ORDER_PRODUCT)
-            .values(orderedItems.stream().map(DSL::row))
-            .execute();
+                ctx.dsl().commit().execute();
+            });
+        } catch (Exception e) {
+            logger.error(e);
+            this.dslContext.rollback().execute();
+            throw new InternalServerError("Store order occurred an error! Error: %s".formatted(e.getMessage()));
+        }
     }
 }

@@ -49,6 +49,10 @@ public class OrderController {
     @ApiResponses(
         value = {
             @ApiResponse(responseCode = "201", description = "Create success"),
+            @ApiResponse(responseCode = "404",
+                description = "Order item was not found",
+                content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)) }
+            ),
             @ApiResponse(responseCode = "400",
                 description = "Invalid request body format",
                 content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)) }

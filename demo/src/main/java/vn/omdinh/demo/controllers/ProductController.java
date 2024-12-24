@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.omdinh.demo.dtos.ProductDTO;
 import vn.omdinh.demo.exceptions.ExceptionResponse;
-import vn.omdinh.demo.exceptions.HttpException;
-import vn.omdinh.demo.models.requests.PaginatedSearch;
 import vn.omdinh.demo.models.requests.ProductFilter;
 import vn.omdinh.demo.models.requests.ProductRequest;
 import vn.omdinh.demo.models.responses.PaginatedResultResponse;

@@ -20,7 +20,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 @RestControllerAdvice
 public class RequestExceptionHandler extends ResponseEntityExceptionHandler {
@@ -81,7 +81,7 @@ public class RequestExceptionHandler extends ResponseEntityExceptionHandler {
         @Nonnull HttpStatusCode status,
         @Nonnull WebRequest request
     ) {
-        var errors = new ArrayList<String>();
+        var errors = new HashSet<String>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.add(error.getDefaultMessage());
         }
@@ -89,7 +89,9 @@ public class RequestExceptionHandler extends ResponseEntityExceptionHandler {
             errors.add(error.getDefaultMessage());
         }
 
-        HttpException httpException = new HttpException(HttpStatus.BAD_REQUEST, String.join(",", errors));
+        HttpException httpException = new HttpException(HttpStatus.BAD_REQUEST,
+            String.join(";", errors.stream().toList())
+        );
 
         return handleExceptionInternal(ex, httpException.toExceptionResponse(getRequestURI(request)), headers, httpException.status, request);
     }
