@@ -1,7 +1,7 @@
 package vn.omdinh.demo.repositories;
 
 import jakarta.annotation.Nullable;
-import nu.studer.sample.tables.records.ProductsRecord;
+import vn.omdinh.tables.records.ProductsRecord;
 import vn.omdinh.demo.dtos.ProductDTO;
 import vn.omdinh.demo.models.requests.PaginatedSearch;
 import vn.omdinh.demo.models.requests.ProductFilter;

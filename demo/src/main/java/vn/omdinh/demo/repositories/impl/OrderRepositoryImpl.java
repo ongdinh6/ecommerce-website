@@ -1,6 +1,6 @@
 package vn.omdinh.demo.repositories.impl;
 
-import nu.studer.sample.tables.records.OrdersRecord;
+import vn.omdinh.tables.records.OrdersRecord;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +15,8 @@ import vn.omdinh.demo.utils.StringUtils;
 import java.util.Collection;
 import java.util.List;
 
-import static nu.studer.sample.tables.Orders.ORDERS;
-import static nu.studer.sample.tables.OrderProduct.ORDER_PRODUCT;
+import static vn.omdinh.tables.Orders.ORDERS;
+import static vn.omdinh.tables.OrderProduct.ORDER_PRODUCT;
 
 @Component
 public class OrderRepositoryImpl implements OrderRepository {

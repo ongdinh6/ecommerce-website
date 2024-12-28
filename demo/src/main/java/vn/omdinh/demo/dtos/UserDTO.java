@@ -20,6 +20,7 @@ public class UserDTO implements UserDetails {
     private String email;
     private String fullName;
     private Date createdAt;
+    private Collection<? extends GrantedAuthority> roles;
 
     @Override
     public boolean isAccountNonExpired() {
@@ -43,7 +44,7 @@ public class UserDTO implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return this.roles;
     }
 
     @Override

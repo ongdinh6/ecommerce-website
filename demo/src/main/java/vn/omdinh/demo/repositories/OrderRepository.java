@@ -1,6 +1,6 @@
 package vn.omdinh.demo.repositories;
 
-import nu.studer.sample.tables.records.OrdersRecord;
+import vn.omdinh.tables.records.OrdersRecord;
 import org.springframework.stereotype.Repository;
 import vn.omdinh.demo.dtos.OrderDTO;
 import vn.omdinh.demo.dtos.OrderProductDTO;

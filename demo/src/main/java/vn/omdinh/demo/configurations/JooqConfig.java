@@ -37,6 +37,6 @@ public class JooqConfig {
 
     @Bean
     public DSLContext dslContext() {
-        return DSL.using(connection, SQLDialect.MYSQL);
+        return DSL.using(connection, SQLDialect.MARIADB);
     }
 }

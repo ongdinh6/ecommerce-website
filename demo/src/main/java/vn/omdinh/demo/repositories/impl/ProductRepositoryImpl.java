@@ -1,7 +1,7 @@
 package vn.omdinh.demo.repositories.impl;
 
 import jakarta.annotation.Nullable;
-import nu.studer.sample.tables.records.ProductsRecord;
+import vn.omdinh.tables.records.ProductsRecord;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -16,8 +16,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import static nu.studer.sample.tables.OrderProduct.ORDER_PRODUCT;
-import static nu.studer.sample.tables.Products.PRODUCTS;
+import static vn.omdinh.tables.OrderProduct.ORDER_PRODUCT;
+import static vn.omdinh.tables.Products.PRODUCTS;
 
 @Repository
 public class ProductRepositoryImpl implements ProductRepository {

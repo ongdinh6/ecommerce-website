@@ -1,5 +1,5 @@
 databaseChangeLog:
   - includeAll:
-      path: db/changelog/migration/
+      path: src/main/resources/db/changelog/migration/
 
 
